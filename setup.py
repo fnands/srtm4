@@ -32,7 +32,8 @@ class CustomBuildPy(build_py.build_py, object):
 
 requirements = ['filelock',
                 'numpy',
-                'requests']
+                'requests', 
+                'cloudpathlib']
 
 
 extras_require = {
