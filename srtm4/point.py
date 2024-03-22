@@ -82,7 +82,7 @@ def srtm4(lon, lat):
         lon_lats = lon_lats_str(lon, lat)
         p = subprocess.Popen(['srtm4'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                             env={'PATH': BIN,
-                                'SRTM4_CACHE': SRTM_DIR,
+                                'SRTM4_CACHE': tmpdirname,
                                 'GEOID_PATH': GEOID})
         outs, errs = p.communicate(input=lon_lats.encode())
 

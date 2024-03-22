@@ -88,7 +88,7 @@ def get_srtm_tile(srtm_tile, out_dir):
 
     
     try:
-        print("Downloading {}".format(srtm_tile_url))
+        print(f"Downloading {srtm_tile_url} to {zip_path}")
         download(zip_path, srtm_tile_url)
     except (ConnectionError, RetryError) as e:
         #lock_zip.release()
@@ -96,7 +96,8 @@ def get_srtm_tile(srtm_tile, out_dir):
 
     #lock_tif = filelock.FileLock(srtm_tif_write_lock)
     #lock_tif.acquire()
-
+    print(os.listdir(out_dir))
+    print(zipfile.is_zipfile(zip_path))
     # extract the tif file
     if zipfile.is_zipfile(zip_path):
         z = zipfile.ZipFile(zip_path, 'r')
@@ -104,5 +105,6 @@ def get_srtm_tile(srtm_tile, out_dir):
     else:
         print('{} not available'.format(srtm_tile))
 
+    print(os.listdir(out_dir))
     # remove the zip file
     os.remove(zip_path)
