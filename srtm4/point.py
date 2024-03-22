@@ -4,6 +4,8 @@ import subprocess
 import numpy as np
 
 from srtm4 import download
+import tempfile
+
 
 SRTM_DIR = os.getenv('SRTM4_CACHE')
 
@@ -71,18 +73,19 @@ def srtm4(lon, lat):
     # get the names of srtm_tiles needed
     srtm_tiles = srtm4_which_tile(lon, lat)
 
-    # download the tiles if not already there
-    for srtm_tile in set(srtm_tiles):
-        download.get_srtm_tile(srtm_tile, SRTM_DIR)
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        # download the tiles if not already there
+        for srtm_tile in set(srtm_tiles):
+            download.get_srtm_tile(srtm_tile, tmpdirname)
 
-    # run the srtm4 binary and feed it from stdin
-    lon_lats = lon_lats_str(lon, lat)
-    p = subprocess.Popen(['srtm4'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                         env={'PATH': BIN,
-                              'SRTM4_CACHE': SRTM_DIR,
-                              'GEOID_PATH': GEOID})
-    outs, errs = p.communicate(input=lon_lats.encode())
+        # run the srtm4 binary and feed it from stdin
+        lon_lats = lon_lats_str(lon, lat)
+        p = subprocess.Popen(['srtm4'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                            env={'PATH': BIN,
+                                'SRTM4_CACHE': SRTM_DIR,
+                                'GEOID_PATH': GEOID})
+        outs, errs = p.communicate(input=lon_lats.encode())
 
-    # return the altitudes
-    alts = list(map(float, outs.decode().split()))
-    return alts if isinstance(lon, (list, np.ndarray)) else alts[0]
+        # return the altitudes
+        alts = list(map(float, outs.decode().split()))
+        return alts if isinstance(lon, (list, np.ndarray)) else alts[0]
