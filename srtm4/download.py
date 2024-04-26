@@ -76,7 +76,6 @@ def get_srtm_tile(srtm_tile, out_dir):
     # download the zip file
     srtm_tile_url = '{}/{}.zip'.format(SRTM_URL, srtm_tile)
     zip_path = os.path.join(out_dir, '{}.zip'.format(srtm_tile))
-    print(zip_path)
     #lock_zip = filelock.FileLock(srtm_zip_download_lock)
     #lock_zip.acquire()
 
