@@ -63,13 +63,19 @@ def download(to_file, from_url):
 
 def get_srtm_tile(srtm_tile, out_dir):
     """
-    Download and unzip an srtm tile from the internet.
+    Download and unzip an srtm tile from the s3.
 
     Args:
         srtm_tile: string following the pattern 'srtm_%02d_%02d', identifying
             the desired strm tile
         out_dir: directory where to store and extract the srtm tiles
     """
+
+    output_dir = os.path.abspath(os.path.expanduser(out_dir))
+    try:
+        os.makedirs(output_dir)
+    except OSError:
+        pass
 
     print("name output")
 
