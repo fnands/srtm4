@@ -107,9 +107,10 @@ def get_srtm_tile(srtm_tile, out_dir):
     if zipfile.is_zipfile(zip_path):
         z = zipfile.ZipFile(zip_path, 'r')
         z.extract('{}.tif'.format(srtm_tile), out_dir)
+        # remove the zip file
+        os.remove(zip_path)
     else:
         print('{} not available'.format(srtm_tile))
 
     print(os.listdir(out_dir))
-    # remove the zip file
-    os.remove(zip_path)
+
