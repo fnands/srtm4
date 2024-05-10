@@ -77,15 +77,36 @@ def get_srtm_tile(srtm_tile, out_dir):
     except OSError:
         pass
 
+    srtm_zip_download_lock = os.path.join(output_dir, 'srtm_zip.lock')
+    srtm_tif_write_lock = os.path.join(output_dir, 'srtm_tif.lock')
+
+    if os.path.exists(os.path.join(output_dir, '{}.tif'.format(srtm_tile))):
+        # the tif file is either being written or finished writing
+        # locking will ensure it is not being written.
+        # Also by construction we won't write on something complete.
+        if os.path.exists(srtm_tif_write_lock):
+            lock_tif = filelock.FileLock(srtm_tif_write_lock)
+            lock_tif.acquire()
+            lock_tif.release()
+        return
+
     print("name output")
 
     # download the zip file
     srtm_tile_url = '{}/{}.zip'.format(SRTM_URL, srtm_tile)
     zip_path = os.path.join(out_dir, '{}.zip'.format(srtm_tile))
-    #lock_zip = filelock.FileLock(srtm_zip_download_lock)
-    #lock_zip.acquire()
 
-    print("name output")
+    lock_zip = filelock.FileLock(srtm_zip_download_lock)
+    lock_zip.acquire()
+
+    if os.path.exists(os.path.join(output_dir, '{}.tif'.format(srtm_tile))):
+        # since the zip lock is returned after the tif lock
+        # if we end up here, it means another process downloaded the zip
+        # and extracted it.
+        # No need to wait on lock_tif
+        lock_zip.release()
+        return
+
 
     if os.path.exists(zip_path):
         print('zip already exists')
@@ -93,24 +114,25 @@ def get_srtm_tile(srtm_tile, out_dir):
 
     
     try:
-        print(f"Downloading {srtm_tile_url} to {zip_path}")
         download(zip_path, srtm_tile_url)
     except (ConnectionError, RetryError) as e:
-        #lock_zip.release()
+        lock_zip.release()
         raise e
 
-    #lock_tif = filelock.FileLock(srtm_tif_write_lock)
-    #lock_tif.acquire()
-    print(os.listdir(out_dir))
-    print(zipfile.is_zipfile(zip_path))
+    lock_tif = filelock.FileLock(srtm_tif_write_lock)
+    lock_tif.acquire()
+
     # extract the tif file
     if zipfile.is_zipfile(zip_path):
         z = zipfile.ZipFile(zip_path, 'r')
         z.extract('{}.tif'.format(srtm_tile), out_dir)
-        # remove the zip file
-        os.remove(zip_path)
     else:
         print('{} not available'.format(srtm_tile))
 
-    print(os.listdir(out_dir))
+    # remove the zip file
+    os.remove(zip_path)
+
+    # release locks
+    lock_tif.release()
+    lock_zip.release()
 
